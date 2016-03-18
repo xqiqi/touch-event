@@ -1,0 +1,342 @@
+<!doctype html>
+<html>
+    <head>
+    	<meta charset="utf-8">
+    	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    	<title>单个元素touch example</title>
+    	<style>
+    		html, body {
+    			width: 100%;
+    			height: 100%;
+    			margin: 0;
+    			padding: 0;
+    		}
+
+    		body{
+    			width: 100%;
+    			height: 100%;
+    			background-color: #d3e2fc;
+    			color: #ecf0f1;
+    		}
+
+    		.content{
+    			padding: 32px;
+    			box-sizing: border-box;
+    			overflow: hidden;
+    		}
+
+    		.swipe-element{
+    			position: relative;
+    			width: 100%;
+    			height: 60px;
+    		}
+
+    		.swipe-front{
+    			position: absolute;
+    			width: 100%;
+    			height: 60px;
+    			left: 0;
+    			top: 0;
+    			margin: 0;
+    			padding: 8px;
+    			box-sizing: border-box;
+    			text-align: center;
+    			color: #ecf0f1;
+    			line-height: 44px;
+    			background-color: #4285f4;
+    			z-index: 2;
+
+    			/*去除浏览器手势*/
+    			-ms-touch-action: none;
+    			touch-action: none;
+    		}
+
+    		/*弹性盒子，父容器*/
+    		.swipe-back{
+    			position: absolute;
+    			display: -ms-flexbox;
+    			display: -webkit-flex;
+    			display: flex;
+    			width: 100%;
+    			height: 60px;
+    			left: 0;
+    			top: 0;
+
+    			-ms-flex-direction: row;
+    			-webkit-flex-direction: row;
+    			flex-direction: row;
+
+    			-ms-flex-pack: justify;
+    			-webkit-justify-content: space-around;
+    			justify-content: space-around;
+
+    			-ms-flex-align: center;
+    			-webkit-align-items: center;
+    			align-items: center;
+
+    			padding: 0 10px;
+    			box-sizing: border-box;
+    		}
+    		.swipe-back button{
+    			display: inline-block;
+    			width: 40px;
+    			height: 40px;
+    			background-color: #4285f4;
+    			border-radius: 100%;
+    			border-style: none;
+    		}
+    		.swipe-back button:nth-child(2){
+    			background-color: #0f9d58;
+    		}
+    		.swipe-back button:nth-child(3){
+    			background-color: #cb4437;
+    		}
+    		.swipe-back button:nth-child(4){
+    			background-color: #f4b400;
+    		}
+
+    		.promote-layer{
+    			-webkit-backface-visibility: hidden;
+    			backface-visibility: hidden;
+    		}
+    	</style>
+    </head>
+    <body>
+    	<section class="content">
+    		<div class="swipe-element">
+    			<div class="swipe-back">
+    				<button></button>
+    				<button></button>
+    				<button></button>
+    				<button></button>
+    			</div>
+    			<p class="swipe-front promote layer">Swipe Me</p>
+    		</div>
+    	</section>
+
+    	<section class="content">
+    		<div class="swipe-element">
+    			<div class="swipe-back">
+    				<button></button>
+    				<button></button>
+    				<button></button>
+    				<button></button>
+    			</div>
+    			<p class="swipe-front promote layer">Swipe Me Too</p>
+    		</div>
+    	</section>
+
+    	<script>
+    		//动画帧，画面改变事件
+    		window.requestAnimFrame = (function(){
+    			return  window.requestAnimationFrame       ||
+		                window.webkitRequestAnimationFrame ||
+		                window.mozRequestAnimationFrame    ||
+		                function( callback ){
+		                  window.setTimeout(callback, 1000 / 60);//定义每秒执行60次动画
+		                };
+		    })();
+
+    		function SwipeRevealItem(element){
+    			var STATE_DEFAULT = 1;
+        		var STATE_LEFT_SIDE = 2;
+        		var STATE_RIGHT_SIDE = 3;
+
+    			var swipeFrontElement = element.querySelector('.swipe-front');
+    			var swipeBack = element.querySelector('.swipe-back');
+    			var initialTouchPos = null;
+    			var lastTouchPos = null;
+    			var isAnimating = false;//判断手势是否仍在运行标志，默认为否
+    			var currentXPosition = 0;
+    			var currentState = STATE_DEFAULT;//默认state均是default，居中
+    			var handleSize = 10;
+
+    			var itemWidth = swipeFrontElement.clientWidth;//确认用户设备的宽度
+    			var slopValue = itemWidth * (1/4);//取1/4作为是否移动块的标准
+    			this.resize = function() {//充值itemWidth和slopValue
+		          	itemWidth = swipeFrontElement.clientWidth;
+		          	slopValue = itemWidth * (1/4);
+		        }
+
+	    		//处理触摸开始的动作
+	    		this.handleGestureStart = function(evt) {
+          			evt.preventDefault();//取消事件的默认动作
+
+          			if(evt.touches && evt.touches.length > 1) {
+            			return;
+          			}
+
+	          		if (window.navigator.msPointerEnabled) {
+	            		document.addEventListener('MSPointerMove', this.handleGestureMove, true);
+	            		document.addEventListener('MSPointerUp', this.handleGestureEnd, true);
+	          		} else {
+	            		document.addEventListener('touchmove', this.handleGestureMove, true);
+	            		document.addEventListener('touchend', this.handleGestureEnd, true);
+	            		document.addEventListener('touchcancel', this.handleGestureEnd, true);
+	          
+	            		document.addEventListener('mousemove', this.handleGestureMove, true);
+	            		document.addEventListener('mouseup', this.handleGestureEnd, true);
+	          		}
+	          
+	          		initialTouchPos = getGesturePointFromEvent(evt);//获取当前坐标值
+	          		swipeFrontElement.style.transition = 'initial';
+        		}.bind(this);
+
+	    		//处理触摸移动的动作
+	    		this.handleGestureMove = function(evt){
+	    			evt.preventDefault();
+	    			console.log('handleGestureMove');
+	    			lastTouchPos = getGesturePointFromEvent(evt);
+
+	    			if (isAnimating) {
+	    				return;
+	    			}
+
+	    			isAnimating = true;//开始变动，手势运行标志赋值为true
+	    			window.requestAnimFrame(onAnimFrame);
+	    		}.bind(this);
+
+	    		//处理触摸结束的动作
+	    		this.handleGestureEnd = function(evt) {
+          			evt.preventDefault();
+
+          			if(evt.touches && evt.touches.length>0) {
+            			return;
+          			}
+
+          			isAnimating = false;
+          
+          			//解除绑定
+          			if (window.navigator.msPointerEnabled) {
+            			document.removeEventListener('MSPointerMove', this.handleGestureMove, true);
+            			document.removeEventListener('MSPointerUp', this.handleGestureEnd, true);
+          			}else{
+            			document.removeEventListener('touchmove', this.handleGestureMove, true);
+            			document.removeEventListener('touchend', this.handleGestureEnd, true);
+            			document.removeEventListener('touchcancel', this.handleGestureEnd, true);
+          
+            			document.removeEventListener('mousemove', this.handleGestureMove, true);
+            			document.removeEventListener('mouseup', this.handleGestureEnd, true);
+          			}
+          
+          			updateSwipeRestPosition();//执行块移动
+        		}.bind(this);
+
+        		//释放触摸后，块移动的处理
+        		function updateSwipeRestPosition() {
+          			var differenceInX = initialTouchPos.x - lastTouchPos.x;//x轴的变化
+          			currentXPosition = currentXPosition - differenceInX;//现在的x轴值
+          
+          			var newState = STATE_DEFAULT;
+
+          			if(Math.abs(differenceInX) > slopValue) {//移动距离的绝对值大于标准值
+            			if(currentState == STATE_DEFAULT) {//判断当前的状态是default，或在left，或在right
+              				if(differenceInX > 0) {//x轴变化为正值，表示用户向左移动（初始>最后，初始在最后的右边）
+                				newState = STATE_LEFT_SIDE;
+              				} else {
+                				newState = STATE_RIGHT_SIDE;
+              				}
+            			} else {//当前状态并非default
+              				if(currentState == STATE_LEFT_SIDE && differenceInX < 0) {//在left时，用户必需向右滑动，x轴变化为负值
+                				newState = STATE_DEFAULT;
+              				} else if(currentState == STATE_RIGHT_SIDE && differenceInX > 0) {
+                				newState = STATE_DEFAULT;
+              				}
+            			}
+          			} else {
+            			newState = currentState;
+          			}
+          
+          			changeState(newState);
+          			swipeFrontElement.style.transition = 'all 150ms ease-out';
+        		}
+
+        		//改变状态
+        		function changeState(newState) {
+		          	var transformStyle;
+		          	switch(newState) {
+		            	case STATE_DEFAULT:
+		              		currentXPosition = 0;
+		              		break;
+		            	case STATE_LEFT_SIDE:
+		              		currentXPosition = -(itemWidth - handleSize);
+		              		break;
+		            	case STATE_RIGHT_SIDE:
+		              		currentXPosition = itemWidth - handleSize;
+		              		break;
+		          	}
+		          
+		          	transformStyle = 'translateX('+currentXPosition+'px)';
+		          
+		          	swipeFrontElement.style.msTransform = transformStyle;
+		          	swipeFrontElement.style.MozTransform = transformStyle;
+		          	swipeFrontElement.style.webkitTransform = transformStyle;
+		          	swipeFrontElement.style.transform = transformStyle;
+
+		          	currentState = newState;
+		        }
+
+	    		//返回当前触摸元素的坐标
+	    		function getGesturePointFromEvent(evt) {
+	    			var point = {};
+
+	    			if(evt.targetTouches) {//触摸事件
+	    				point.x = evt.targetTouches[0].clientX;
+	    				point.y = evt.targetTouches[0].clientY;
+	    			}else{//鼠标事件
+	    				point.x = evt.clientX;
+	    				point.y = evt.clientY;
+	    			}
+
+	    			return point;
+	    		}
+
+	    		//动画帧实际执行函数
+	    		function onAnimFrame(){
+	    			if(!isAnimating) {
+	    				return;
+		        	}
+		        	
+		        	var differenceInX = initialTouchPos.x - lastTouchPos.x;//x坐标的变化
+		          	
+		          	var newXTransform = (currentXPosition - differenceInX)+'px';
+		          	var transformStyle = 'translateX('+newXTransform+')';
+		          	swipeFrontElement.style['-webkit-transform'] = transformStyle;
+		          	swipeFrontElement.style['-moz-transform'] = transformStyle;
+		          	swipeFrontElement.style.transform = transformStyle;
+		          
+		          	isAnimating = false;//运动完成，标志设为false
+		        }
+
+	    		//设置开始的监听
+	    		if (window.navigator.msPointerEnabled) {
+		    	    swipeFrontElement.addEventListener('MSPointerDown', this.handleGestureStart, true);
+		    	}else{
+		    	    swipeFrontElement.addEventListener('touchstart', this.handleGestureStart, true);
+		    	    swipeFrontElement.addEventListener('mousedown', this.handleGestureStart, true);
+		    	}
+	    	}
+
+	    	var swipeRevealItems = [];
+
+      		window.onload = function () {
+        		var swipeRevealItemElements = document.querySelectorAll('.swipe-element');
+        		for(var i = 0; i < swipeRevealItemElements.length; i++) {
+          			swipeRevealItems.push(new SwipeRevealItem(swipeRevealItemElements[i]));
+        		}
+
+        		window.onload = function() {
+          			if(/iP(hone|ad)/.test(window.navigator.userAgent)) {//Safari在iOS上应用active状态
+            			document.body.addEventListener('touchstart', function() {}, false);
+          			}
+        		};
+      		};
+
+      		window.onresize = function () {
+        		for(var i = 0; i < swipeRevealItems.length; i++) {
+          			swipeRevealItems[i].resize();
+        		}
+      		};
+       	</script>
+    </body>
+</html>
