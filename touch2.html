@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-		<meta charset="utf-8">
+	<meta charset="utf-8">
     	<meta name="viewport" content="width=device-width, initial-scale=1.0">
     	<!-- IE去除tab高亮 -->
     	<meta name="msapplication-tap-highlight" content="no">
@@ -151,11 +151,11 @@
 	          	var point = {};
 
 	          	if(evt.targetTouches){
-	            	point.x = evt.targetTouches[0].clientX;
-	            	point.y = evt.targetTouches[0].clientY;
+	            		point.x = evt.targetTouches[0].clientX;
+	            		point.y = evt.targetTouches[0].clientY;
 	          	}else{
-	            	point.x = evt.clientX;
-	            	point.y = evt.clientY;
+	            		point.x = evt.clientX;
+	            		point.y = evt.clientY;
 	          	}
 
 	          	return point;
@@ -164,7 +164,7 @@
 	        //变动函数
 	        function onAnimFrame(){
 	          	if(!isAnimating){//手势不在运行中，退出方法
-	            	return;
+	            		return;
 	          	}
 	          
 	          	var newYTransform = lastHolderPos -(initialYPos - lastYPos);
@@ -183,9 +183,9 @@
 	        function limitValueToSlider(value){
 	        	//不超过屏幕长度
 	        	if(Math.abs(value) > element.clientHeight){
-					value = element.clientHeight;
+				value = element.clientHeight;
 	          	}else if(value < 0){
-	            	value = 0;
+	            		value = 0;
 	          	}
 	          	return value;
 	        }
@@ -214,7 +214,7 @@
 
         	window.onload = function() {
           		if(/iP(hone|ad)/.test(window.navigator.userAgent)) {
-            		document.body.addEventListener('touchstart', function() {}, false);
+            			document.body.addEventListener('touchstart', function() {}, false);
           		}
         	};
       	};
