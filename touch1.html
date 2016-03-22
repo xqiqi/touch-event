@@ -153,7 +153,7 @@
 
     			var itemWidth = swipeFrontElement.clientWidth;//确认用户设备的宽度
     			var slopValue = itemWidth * (1/4);//取1/4作为是否移动块的标准
-    			this.resize = function() {//充值itemWidth和slopValue
+    			this.resize = function() {//初始itemWidth和slopValue
 		          	itemWidth = swipeFrontElement.clientWidth;
 		          	slopValue = itemWidth * (1/4);
 		        }
@@ -163,19 +163,19 @@
           			evt.preventDefault();//取消事件的默认动作
 
           			if(evt.touches && evt.touches.length > 1) {
-            			return;
+            				return;
           			}
 
 	          		if (window.navigator.msPointerEnabled) {
-	            		document.addEventListener('MSPointerMove', this.handleGestureMove, true);
-	            		document.addEventListener('MSPointerUp', this.handleGestureEnd, true);
+	            			document.addEventListener('MSPointerMove', this.handleGestureMove, true);
+	            			document.addEventListener('MSPointerUp', this.handleGestureEnd, true);
 	          		} else {
-	            		document.addEventListener('touchmove', this.handleGestureMove, true);
-	            		document.addEventListener('touchend', this.handleGestureEnd, true);
-	            		document.addEventListener('touchcancel', this.handleGestureEnd, true);
+	            			document.addEventListener('touchmove', this.handleGestureMove, true);
+	            			document.addEventListener('touchend', this.handleGestureEnd, true);
+	            			document.addEventListener('touchcancel', this.handleGestureEnd, true);
 	          
-	            		document.addEventListener('mousemove', this.handleGestureMove, true);
-	            		document.addEventListener('mouseup', this.handleGestureEnd, true);
+	            			document.addEventListener('mousemove', this.handleGestureMove, true);
+	            			document.addEventListener('mouseup', this.handleGestureEnd, true);
 	          		}
 	          
 	          		initialTouchPos = getGesturePointFromEvent(evt);//获取当前坐标值
@@ -201,22 +201,22 @@
           			evt.preventDefault();
 
           			if(evt.touches && evt.touches.length>0) {
-            			return;
+            				return;
           			}
 
           			isAnimating = false;
           
           			//解除绑定
           			if (window.navigator.msPointerEnabled) {
-            			document.removeEventListener('MSPointerMove', this.handleGestureMove, true);
-            			document.removeEventListener('MSPointerUp', this.handleGestureEnd, true);
+            				document.removeEventListener('MSPointerMove', this.handleGestureMove, true);
+            				document.removeEventListener('MSPointerUp', this.handleGestureEnd, true);
           			}else{
-            			document.removeEventListener('touchmove', this.handleGestureMove, true);
-            			document.removeEventListener('touchend', this.handleGestureEnd, true);
-            			document.removeEventListener('touchcancel', this.handleGestureEnd, true);
+            				document.removeEventListener('touchmove', this.handleGestureMove, true);
+            				document.removeEventListener('touchend', this.handleGestureEnd, true);
+            				document.removeEventListener('touchcancel', this.handleGestureEnd, true);
           
-            			document.removeEventListener('mousemove', this.handleGestureMove, true);
-            			document.removeEventListener('mouseup', this.handleGestureEnd, true);
+            				document.removeEventListener('mousemove', this.handleGestureMove, true);
+            				document.removeEventListener('mouseup', this.handleGestureEnd, true);
           			}
           
           			updateSwipeRestPosition();//执行块移动
